@@ -14,3 +14,7 @@ This is a simple **file encryption and decryption** program written in **C++**. 
 - A **text file** for encryption/decryption.
 
 ## Installation & Compilation
+1. Clone the repository:
+   git clone https://github.com/Bissojit/Encrypt-Decrypt-Program.git
+
+2. cd Encrypt-Decrypt-Program
