@@ -2,11 +2,12 @@
 #include <iostream>
 #include <fstream>
 #include <cctype>
-#include <unistd.h> // Required for getcwd() on macOS/Linux
+#include <unistd.h>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
-// Function to print the working directory (for debugging)
 void printWorkingDirectory() {
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
@@ -18,8 +19,7 @@ void printWorkingDirectory() {
 
 bool performCaesarCipher(string& content, bool encrypt) {
     int shift = encrypt ? 3 : -3;
-
-    for (size_t i = 0; i < content.length(); ++i) {  // Traditional loop for compatibility
+    for (size_t i = 0; i < content.length(); ++i) {
         char& ch = content[i];
         if (isalpha(ch)) {
             char base = isupper(ch) ? 'A' : 'a';
@@ -29,35 +29,45 @@ bool performCaesarCipher(string& content, bool encrypt) {
     return true;
 }
 
-bool encryptFile(const string& filename, bool encrypt) {
-    printWorkingDirectory(); // Debugging: Show working directory
+string encryptFile(const string& inputName, bool encrypt) {
+    printWorkingDirectory();
 
-    // Open the input file
-    ifstream inFile(filename);
-    if (!inFile) {
-        cerr << "Error: Unable to open file '" << filename << "'. Make sure the file exists." << endl;
-        return false;
+    fs::path filePath = inputName;
+
+    if (!fs::exists(filePath)) {
+        filePath = fs::current_path() / inputName;
+        if (!fs::exists(filePath)) {
+            cerr << "Error: File not found: " << inputName << endl;
+            return "";
+        }
     }
 
-    // Read file content
+    ifstream inFile(filePath);
+    if (!inFile) {
+        cerr << "Error: Unable to open file: " << filePath << endl;
+        return "";
+    }
+
     string content((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
     inFile.close();
 
     if (performCaesarCipher(content, encrypt)) {
-        // Generate output filename
-        string outputFilename = encrypt ? "encrypted_" + filename : "decrypted_" + filename;
-        ofstream outFile(outputFilename);
+        string baseName = filePath.filename().string();
+        string outputName = encrypt ? "encrypted_" + baseName : "decrypted_" + baseName;
+        fs::path outputPath = filePath.parent_path() / outputName;
+
+        ofstream outFile(outputPath);
         if (!outFile) {
-            cerr << "Error: Unable to create output file: " << outputFilename << endl;
-            return false;
+            cerr << "Error: Unable to create output file: " << outputPath << endl;
+            return "";
         }
 
         outFile << content;
         outFile.close();
-        
-        cout << "Success! Output saved to: " << outputFilename << endl;
-        return true;
+
+        cout << "Success! Output saved to: " << outputPath << endl;
+        return outputPath.string(); // ✅ Return full path
     }
 
-    return false;
+    return "";
 }

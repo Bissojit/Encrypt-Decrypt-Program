@@ -1,34 +1,75 @@
-#include <iostream>
-#include <string>
+#include <QApplication>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QLabel>
+#include <QMessageBox>
+#include <QString>
+#include <QFileDialog>
 #include "encryption.h"
 
-using namespace std;
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
 
-int main() {
-    string filename;
-    char mode;
+    QWidget window;
+    window.setWindowTitle("Encrypt/Decrypt File");
 
-    cout << "Enter the filename (with full path if needed): ";
-    getline(cin >> ws, filename); // Trim whitespace
+    QVBoxLayout *layout = new QVBoxLayout();
 
-    cout << "Encrypt (e) or Decrypt (d)? ";
-    cin >> mode;
+    QLabel *fileLabel = new QLabel("Select a text file:");
+    QLineEdit *fileInput = new QLineEdit();
+    QPushButton *chooseFileButton = new QPushButton("Choose Your File");
+    QPushButton *encryptButton = new QPushButton("Encrypt");
+    QPushButton *decryptButton = new QPushButton("Decrypt");
 
-    if (mode == 'e' || mode == 'E') {
-        if (encryptFile(filename, true)) {
-            cout << "File encrypted successfully." << endl;
-        } else {
-            cerr << "Error: Unable to perform encryption." << endl;
+    layout->addWidget(fileLabel);
+    layout->addWidget(fileInput);
+    layout->addWidget(chooseFileButton);
+    layout->addWidget(encryptButton);
+    layout->addWidget(decryptButton);
+
+    QObject::connect(chooseFileButton, &QPushButton::clicked, [&]() {
+        QString fileName = QFileDialog::getOpenFileName(&window, "Open Text File", QString(),
+                                                        "Text Files (*.txt);;All Files (*)");
+        if (!fileName.isEmpty()) {
+            fileInput->setText(fileName);
         }
-    } else if (mode == 'd' || mode == 'D') {
-        if (encryptFile(filename, false)) {
-            cout << "File decrypted successfully." << endl;
-        } else {
-            cerr << "Error: Unable to perform decryption." << endl;
-        }
-    } else {
-        cerr << "Error: Invalid mode selected. Use 'e' for encryption or 'd' for decryption." << endl;
-    }
+    });
 
-    return 0;
+    QObject::connect(encryptButton, &QPushButton::clicked, [&]() {
+        std::string filename = fileInput->text().toStdString();
+        if (filename.empty()) {
+            QMessageBox::warning(&window, "Warning", "Please select a file.");
+            return;
+        }
+        std::string outputPath = encryptFile(filename, true);
+        if (!outputPath.empty()) {
+            QMessageBox::information(&window, "Success", 
+                QString::fromStdString("File encrypted successfully.\nSaved to:\n" + outputPath));
+        } else {
+            QMessageBox::critical(&window, "Error", "Failed to encrypt file.");
+        }
+    });
+
+    QObject::connect(decryptButton, &QPushButton::clicked, [&]() {
+        std::string filename = fileInput->text().toStdString();
+        if (filename.empty()) {
+            QMessageBox::warning(&window, "Warning", "Please select a file.");
+            return;
+        }
+        std::string outputPath = encryptFile(filename, false);
+        if (!outputPath.empty()) {
+            QMessageBox::information(&window, "Success", 
+                QString::fromStdString("File decrypted successfully.\nSaved to:\n" + outputPath));
+        } else {
+            QMessageBox::critical(&window, "Error", "Failed to decrypt file.");
+        }
+    });
+
+    window.setLayout(layout);
+    window.resize(400, 250);
+    window.show();
+
+    return app.exec();
 }
