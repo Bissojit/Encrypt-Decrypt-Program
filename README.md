@@ -7,7 +7,6 @@ A simple C++ GUI-based application using Qt that allows users to **encrypt** and
 
 - GUI-based file selection (with "Choose Your File" button).
 - Caesar Cipher encryption and decryption.
-- Works with both full file paths and relative filenames in the current directory.
 - Displays success message with the location of the saved file.
 - Easy to use and beginner-friendly.
 
