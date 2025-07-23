@@ -66,7 +66,7 @@ string encryptFile(const string& inputName, bool encrypt) {
         outFile.close();
 
         cout << "Success! Output saved to: " << outputPath << endl;
-        return outputPath.string(); // ✅ Return full path
+        return outputPath.string(); // Return full path
     }
 
     return "";
